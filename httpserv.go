@@ -148,7 +148,7 @@ func (t *HttpServer) SignalStop() {
 	close(t.signalStop)
 }
 
-//Function doesn't guarantee server is running for tls but shows if server was started NewHttpServTLS;
+//Function doesn't guarantee server is running for tls but shows if server was started with NewHttpServTLS;
 //it fallbacks to the default behavior of go's http tls procedure.
 func (t *HttpServer) StartedForTLS() bool {
 	return t.startedForTLS
