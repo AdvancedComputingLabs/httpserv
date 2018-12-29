@@ -2,17 +2,17 @@
 
 ## Usage:
 
-### Starting http server:
+### Creating http server:
 ```
 http_server := aclabs_httpserv.NewHttpServ(httpPort, homeDirectoryForWebsite, httpRequestHandler)
 ```
 
-### Starting https server:
+### Creating https server:
 ```
 https_server := aclabs_httpserv.NewHttpServTLS(httpPort, homeDirectoryForWebsite, httpRequestHandler, certFile, keyFile)
 ```
 
-### Shutting down server:
+### Closing server:
 ```
 http_server.SignalStop()
 http_server.WaitToFinish()
