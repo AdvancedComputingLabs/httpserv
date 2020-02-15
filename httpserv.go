@@ -31,21 +31,21 @@ type HttpServer struct {
 	startedForTLS         bool
 	keyFile               string
 	port                  int
-	root_dir              string
-	signalStop            chan struct{}
+	rootDir               string
+	signalStopNotifier    chan struct{}
 }
 
 func createHttpServer(port int, root_dir string, request_handler_fptr func(http.ResponseWriter, *http.Request)) *HttpServer {
 	srv := HttpServer{
-		port:       port,
-		handler:    request_handler_fptr,
-		finished:   make(chan struct{}),
-		root_dir:   strings.TrimSpace(root_dir),
-		signalStop: make(chan struct{}),
+		port:               port,
+		handler:            request_handler_fptr,
+		finished:           make(chan struct{}),
+		rootDir:            strings.TrimSpace(root_dir),
+		signalStopNotifier: make(chan struct{}),
 	}
 
-	if len(srv.root_dir) == 0 {
-		srv.root_dir = "/"
+	if len(srv.rootDir) == 0 {
+		srv.rootDir = "/"
 	}
 
 	return &srv
@@ -70,7 +70,7 @@ func (t *HttpServer) initHttpsServerAsync() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc(t.root_dir, t.handler)
+	mux.HandleFunc(t.rootDir, t.handler)
 
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%d", t.port),
@@ -79,7 +79,7 @@ func (t *HttpServer) initHttpsServerAsync() {
 	idleConnsClosed := make(chan struct{})
 
 	go func() {
-		<-t.signalStop
+		<-t.signalStopNotifier
 
 		if t.startedForTLS {
 			log.Printf("Shutting https server on port %d ...\n", t.port)
@@ -121,7 +121,7 @@ func (t *HttpServer) initHttpsServerAsync() {
 	<-idleConnsClosed
 }
 
-func (t *HttpServer) IsInitialized() (bool, error) {
+func (t HttpServer) IsInitialized() (bool, error) {
 	return t.initialized, t.errorOnInitialization
 }
 
@@ -144,16 +144,21 @@ func NewHttpServTLS(port int, root_dir string, request_handler_fptr func(http.Re
 	return srv
 }
 
-func (t *HttpServer) SignalStop() {
-	close(t.signalStop)
+func (t *HttpServer) signalStop() {
+	close(t.signalStopNotifier)
+}
+
+func (t *HttpServer) Shutdown() {
+	t.signalStop()
+	t.waitToFinish()
 }
 
 //Function doesn't guarantee server is running for tls but shows if server was started with NewHttpServTLS;
 //it fallbacks to the default behavior of go's http tls procedure.
-func (t *HttpServer) StartedForTLS() bool {
+func (t HttpServer) StartedForTLS() bool {
 	return t.startedForTLS
 }
 
-func (t *HttpServer) WaitToFinish() {
+func (t *HttpServer) waitToFinish() {
 	<-t.finished
 }
