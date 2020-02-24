@@ -14,8 +14,7 @@ https_server := aclabs_httpserv.NewHttpServTLS(httpPort, homeDirectoryForWebsite
 
 ### Closing server:
 ```
-http_server.SignalStop()
-http_server.WaitToFinish()
+http_server.Shutdown()
 ```
 
 ## TODO:
